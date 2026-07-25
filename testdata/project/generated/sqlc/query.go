@@ -1,0 +1,3 @@
+package sqlc
+
+func Query() {}

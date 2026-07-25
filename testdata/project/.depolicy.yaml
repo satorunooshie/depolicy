@@ -1,0 +1,132 @@
+version: 1
+
+package-sets:
+  generated:
+    - local:generated/...
+
+  domain-shared:
+    - local:domain/shared/...
+
+rule-sets:
+  api-common:
+    - id: deny-generated
+      deny:
+        - set:generated
+
+    - id: deny-components
+      deny:
+        - local:component/...
+
+policies:
+  - id: api-handler
+    packages:
+      - local:api/*/handler/...
+    imports:
+      default: allow
+      rules:
+        - use: api-common
+        - id: deny-errors
+          deny:
+            - std:errors
+        - id: deny-infra
+          deny:
+            - local:infra/...
+        - id: deny-usecase
+          deny:
+            - local:usecase/...
+
+  - id: component
+    packages:
+      - local:component/{component}/...
+    imports:
+      default: allow
+      rules:
+        - id: allow-same-component
+          allow:
+            - local:component/{component}/...
+        - id: deny-other-components
+          deny:
+            - local:component/...
+        - id: deny-api
+          deny:
+            - local:api/...
+
+  - id: domain-context
+    packages:
+      - local:domain/{context}/...
+    imports:
+      default: allow
+      rules:
+        - id: allow-same-context
+          allow:
+            - local:domain/{context}/...
+        - id: allow-domain-shared
+          allow:
+            - set:domain-shared
+        - id: deny-other-contexts
+          deny:
+            - local:domain/...
+
+  - id: core
+    packages:
+      - local:core/...
+    imports:
+      default: deny
+      rules:
+        - id: allow-standard-library
+          allow:
+            - std:...
+
+  - id: infra
+    packages:
+      - local:infra/...
+    imports:
+      default: allow
+      rules:
+        - id: deny-generated
+          deny:
+            - set:generated
+
+  - id: generated
+    packages:
+      - local:generated/...
+    imports:
+      default: allow
+
+  - id: usecase
+    packages:
+      - local:usecase/...
+    imports:
+      default: allow
+      rules:
+        - id: deny-api
+          deny:
+            - local:api/...
+        - id: deny-generated
+          deny:
+            - set:generated
+        - id: deny-errors
+          deny:
+            - std:errors
+
+  - id: integration
+    packages:
+      - local:integration/...
+    imports:
+      default: allow
+      rules:
+        - id: deny-forbidden-external
+          deny:
+            - external:example.com/ext/forbidden
+
+  - id: ambiguous-wide
+    packages:
+      - local:ambiguous/...
+    imports:
+      default: allow
+
+  - id: ambiguous-service
+    packages:
+      - local:ambiguous/service/...
+    imports:
+      default: deny
