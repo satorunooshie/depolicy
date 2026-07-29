@@ -185,6 +185,8 @@ Depolicy searches for this file from the current working directory upward. You c
 depolicy check --config ./.depolicy.yaml ./...
 ```
 
+CLI commands fail if `.depolicy.yaml` is not found. When Depolicy runs as a `go vet` analyzer, a missing `.depolicy.yaml` is treated as no-op so unconfigured modules can still run vet successfully.
+
 A minimal configuration looks like this:
 
 ```yaml

@@ -1,6 +1,7 @@
 package depolicy
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/token"
@@ -31,6 +32,9 @@ func runAnalyzer(pass *analysis.Pass) (any, error) {
 	}
 	configPath, err := FindConfigFromFiles(filenames...)
 	if err != nil {
+		if errors.Is(err, ErrConfigNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	compiled, err := loadProjectConfigForAnalyzer(configPath)

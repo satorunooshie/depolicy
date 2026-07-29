@@ -17,6 +17,7 @@ type ConfigError struct {
 	Line    int
 	Column  int
 	Message string
+	cause   error
 }
 
 func (e *ConfigError) Error() string {
@@ -29,6 +30,13 @@ func (e *ConfigError) Error() string {
 	}
 	return loc + ": " + e.Message
 }
+
+func (e *ConfigError) Unwrap() error {
+	return e.cause
+}
+
+// ErrConfigNotFound identifies a missing default depolicy configuration file.
+var ErrConfigNotFound = errors.New("depolicy configuration was not found")
 
 func newConfigError(path string, node *yaml.Node, format string, args ...any) *ConfigError {
 	err := &ConfigError{
@@ -56,7 +64,10 @@ func FindConfigFromWorkingDir(dir string) (string, error) {
 		}
 		parent := filepath.Dir(abs)
 		if parent == abs {
-			return "", &ConfigError{Message: fmt.Sprintf("%s was not found", ConfigFileName)}
+			return "", &ConfigError{
+				Message: fmt.Sprintf("%s was not found", ConfigFileName),
+				cause:   ErrConfigNotFound,
+			}
 		}
 		abs = parent
 	}
@@ -97,7 +108,10 @@ func FindConfigFromFiles(filenames ...string) (string, error) {
 	}
 
 	if len(candidates) == 0 {
-		return "", &ConfigError{Message: fmt.Sprintf("%s was not found", ConfigFileName)}
+		return "", &ConfigError{
+			Message: fmt.Sprintf("%s was not found", ConfigFileName),
+			cause:   ErrConfigNotFound,
+		}
 	}
 	sort.Slice(candidates, func(i, j int) bool {
 		if candidates[i].depth != candidates[j].depth {
